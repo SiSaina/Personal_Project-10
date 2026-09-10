@@ -7,21 +7,50 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-    /** @use HasFactory<\Database\Factories\OrdersFactory> */
     use HasFactory;
-    public $timestamps = false;
 
     protected $fillable = [
-        'product_id',
-        'quantity'
+        'user_id',
+        'address_id',
+        'status',
+        'subtotal',
+        'total',
+        'placed_at',
+        'payment_status',
+        'payment_method',
+        'fulfillment_status',
+        'coupon_code',
+        'discount_total',
+        'inventory_restored_at',
+        'shipped_at',
+        'delivered_at',
     ];
 
-    public function product()
+    protected function casts(): array
     {
-        return $this->belongsTo(Product::class);
+        return [
+            'subtotal' => 'decimal:2',
+            'total' => 'decimal:2',
+            'placed_at' => 'datetime',
+            'discount_total' => 'decimal:2',
+            'inventory_restored_at' => 'datetime',
+            'shipped_at' => 'datetime',
+            'delivered_at' => 'datetime',
+        ];
     }
-    public function orderDetails()
+
+    public function user()
     {
-        return $this->hasMany(OrderDetail::class);
+        return $this->belongsTo(User::class);
+    }
+
+    public function address()
+    {
+        return $this->belongsTo(Address::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 }

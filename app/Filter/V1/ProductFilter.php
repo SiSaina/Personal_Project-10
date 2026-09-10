@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filter\V1;
 
 use App\Filter\ApiFilter;
@@ -11,13 +12,11 @@ class ProductFilter extends ApiFilter
         'price' => ['eq', 'lt', 'lte', 'gt', 'gte'],
         'offerPrice' => ['eq', 'lt', 'lte', 'gt', 'gte'],
         'date' => ['eq', 'lt', 'lte', 'gt', 'gte'],
-        'description' => ['eq']
+        'description' => ['eq'],
     ];
 
     protected $columnMap = [
         'categoryId' => 'category_id',
-        'offerPrice' => 'offer_price'
+        'offerPrice' => 'offer_price',
     ];
 }
-
-?>

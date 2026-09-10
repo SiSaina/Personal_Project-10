@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Filter\V1\RoleFilter;
-use App\Models\Role;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\StoreRoleRequest;
 use App\Http\Requests\V1\UpdateRoleRequest;
-use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\RoleCollection;
 use App\Http\Resources\V1\RoleResource;
+use App\Models\Role;
 use Illuminate\Http\Request;
 
 class RoleController extends Controller
@@ -18,15 +18,16 @@ class RoleController extends Controller
      */
     public function index(Request $request)
     {
-        $filter = new RoleFilter();
+        $filter = new RoleFilter;
         $filterItems = $filter->transform($request);
 
         $includeUsers = $request->query('includeUsers');
 
         $roles = Role::where($filterItems);
-        if($includeUsers) {
+        if ($includeUsers) {
             $roles->with('users');
         }
+
         return new RoleCollection($roles
             ->orderBy('id', 'asc')
             ->paginate()
@@ -34,13 +35,14 @@ class RoleController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.     
+     * Store a newly created resource in storage.
+     *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(StoreRoleRequest $request)
     {
-        return new RoleResource(Role::create($request->all()));
+        return new RoleResource(Role::create($request->validated()));
     }
 
     /**
@@ -49,9 +51,10 @@ class RoleController extends Controller
     public function show(Role $role)
     {
         $includeUsers = request()->query('includeUsers');
-        if($includeUsers) {
+        if ($includeUsers) {
             $role->loadMissing('users');
         }
+
         return new RoleResource($role);
     }
 
@@ -61,6 +64,7 @@ class RoleController extends Controller
     public function update(UpdateRoleRequest $request, Role $role)
     {
         $role->update($request->validated());
+
         return new RoleResource($role);
     }
 
@@ -69,6 +73,9 @@ class RoleController extends Controller
      */
     public function destroy(Role $role)
     {
-        //
+        abort_if($role->users()->exists(), 409, 'A role assigned to users cannot be deleted.');
+        $role->delete();
+
+        return response()->noContent();
     }
 }

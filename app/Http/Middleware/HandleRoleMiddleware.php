@@ -17,19 +17,19 @@ class HandleRoleMiddleware
     {
         $user = $request->user();
         // If the user is not authenticated
-        if (!$user) {
+        if (! $user) {
             return response()->json([
-                'message' => 'Please log in to access this resource.'
+                'message' => 'Please log in to access this resource.',
             ], 401);
         }
 
         // If the user doesn't have the correct role to certain CRUD
-        if (!$user->role || !in_array($user->role->role_type, $roles)) {
+        if (! $user->role || ! in_array($user->role->role_type, $roles)) {
             return response()->json([
-                'message' => 'You do not have permission to access this resource.'
+                'message' => 'You do not have permission to access this resource.',
             ], 403);
         }
+
         return $next($request);
     }
-    
 }

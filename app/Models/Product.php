@@ -9,6 +9,7 @@ class Product extends Model
 {
     /** @use HasFactory<\Database\Factories\ProductFactory> */
     use HasFactory;
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -17,19 +18,37 @@ class Product extends Model
         'description',
         'name',
         'offer_price',
-        'price'
+        'price',
+        'stock_quantity',
     ];
-    
+
+    protected function casts(): array
+    {
+        return [
+            'price' => 'decimal:2',
+            'offer_price' => 'decimal:2',
+            'date' => 'date:Y-m-d',
+            'stock_quantity' => 'integer',
+        ];
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
+
     public function images()
     {
         return $this->hasMany(Image::class);
     }
-    public function orders()
+
+    public function orderItems()
     {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(OrderItem::class);
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 }

@@ -25,10 +25,11 @@ class StoreRoleRequest extends FormRequest
             'role_type' => ['required', 'string', 'max:255'],
         ];
     }
+
     public function prepareForValidation()
     {
         $this->merge([
-            'role_type' => $this->roleType,
+            'role_type' => $this->input('roleType', $this->input('role_type')),
         ]);
     }
 }

@@ -11,7 +11,11 @@ class UpdateAddressRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $address = $this->route('address');
+        $role = $this->user()?->role?->role_type;
+
+        return in_array($role, ['Admin', 'Employee'], true)
+            || ($address && $address->user_id === $this->user()?->id);
     }
 
     /**
@@ -21,36 +25,37 @@ class UpdateAddressRequest extends FormRequest
      */
     public function rules(): array
     {
-        if(Request()->isMethod('PUT')){
+        if (Request()->isMethod('PUT')) {
             return [
-                'full_name' => ['required', 'string' ,'max:255'],
-                'postal_code' => ['required', 'string' ,'max:10'],
-                'street_name' => ['required', 'string' ,'max:255'],
+                'full_name' => ['required', 'string', 'max:255'],
+                'postal_code' => ['required', 'string', 'max:10'],
+                'street_name' => ['required', 'string', 'max:255'],
                 'suburb' => ['required', 'string', 'max:255'],
-                'city' => ['required', 'string' ,'max:255'],
-                'country' => ['required', 'string' ,'max:255'],
-                'user_id' => ['required', 'integer' ,'exists:users,id'],
+                'city' => ['required', 'string', 'max:255'],
+                'country' => ['required', 'string', 'max:255'],
+                'user_id' => ['required', 'integer', 'exists:users,id'],
             ];
-        }
-        else {
+        } else {
             return [
-                'full_name' => ['sometimes', 'required', 'string' ,'max:255'],
-                'postal_code' => ['sometimes', 'required', 'string' ,'max:10'],
-                'street_name' => ['sometimes', 'required', 'string' ,'max:255'],
+                'full_name' => ['sometimes', 'required', 'string', 'max:255'],
+                'postal_code' => ['sometimes', 'required', 'string', 'max:10'],
+                'street_name' => ['sometimes', 'required', 'string', 'max:255'],
                 'suburb' => ['sometimes', 'required', 'string', 'max:255'],
-                'city' => ['sometimes', 'required', 'string' ,'max:255'],
-                'country' => ['sometimes', 'required', 'string' ,'max:255'],
-                'user_id' => ['sometimes', 'required', 'integer' ,'exists:users,id'],
+                'city' => ['sometimes', 'required', 'string', 'max:255'],
+                'country' => ['sometimes', 'required', 'string', 'max:255'],
+                'user_id' => ['sometimes', 'required', 'integer', 'exists:users,id'],
             ];
         }
     }
+
     public function prepareForValidation()
     {
-        $this->merge([
-            'full_name' => $this->fullName,
-            'postal_code' => $this->postalCode,
-            'street_name' => $this->streetName,
-            'user_id' => $this->userId
-        ]);
+        $mapped = [];
+        foreach (['fullName' => 'full_name', 'postalCode' => 'postal_code', 'streetName' => 'street_name', 'userId' => 'user_id'] as $input => $attribute) {
+            if ($this->exists($input)) {
+                $mapped[$attribute] = $this->input($input);
+            }
+        }
+        $this->merge($mapped);
     }
 }

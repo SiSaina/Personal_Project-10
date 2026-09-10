@@ -9,6 +9,7 @@ class Address extends Model
 {
     /** @use HasFactory<\Database\Factories\AddressFactory> */
     use HasFactory;
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -18,7 +19,7 @@ class Address extends Model
         'street_name',
         'suburb',
         'city',
-        'country'
+        'country',
     ];
 
     public function user()

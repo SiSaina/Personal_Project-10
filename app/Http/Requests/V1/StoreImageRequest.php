@@ -23,13 +23,14 @@ class StoreImageRequest extends FormRequest
     {
         return [
             'url' => ['required', 'string', 'max:255'],
-            'product_id' => ['required', 'integer' ,'exists:products,id'],
+            'product_id' => ['required', 'integer', 'exists:products,id'],
         ];
     }
+
     public function prepareForValidation()
     {
         $this->merge([
-            'product_id' => $this->productId,
+            'product_id' => $this->input('productId', $this->input('product_id')),
         ]);
     }
 }

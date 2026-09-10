@@ -27,14 +27,17 @@ class StoreProductRequest extends FormRequest
             'description' => ['required', 'string', 'max:1000'],
             'name' => ['required', 'string', 'max:255', 'unique:products,name'],
             'offer_price' => ['required', 'numeric', 'min:0'],
-            'price' => ['required', 'numeric', 'min:0']
+            'price' => ['required', 'numeric', 'min:0'],
+            'stock_quantity' => ['sometimes', 'integer', 'min:0'],
         ];
     }
+
     public function prepareForValidation()
     {
         $this->merge([
-            'category_id' => $this->categoryId,
-            'offer_price' => $this->offerPrice
+            'category_id' => $this->input('categoryId', $this->input('category_id')),
+            'offer_price' => $this->input('offerPrice', $this->input('offer_price')),
+            'stock_quantity' => $this->input('stockQuantity', $this->input('stock_quantity', 0)),
         ]);
     }
 }

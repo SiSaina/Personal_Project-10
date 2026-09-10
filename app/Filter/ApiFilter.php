@@ -4,8 +4,8 @@ namespace App\Filter;
 
 use Illuminate\Http\Request;
 
-
-class ApiFilter {
+class ApiFilter
+{
     protected $safeParms = [];
 
     protected $columnMap = [];
@@ -18,13 +18,14 @@ class ApiFilter {
         'gte' => '>=',
     ];
 
-    public function transform(Request $request) {
+    public function transform(Request $request)
+    {
         $eloQuery = [];
 
         foreach ($this->safeParms as $parm => $operators) {
             $query = $request->query($parm);
 
-            if (!isset($query)) {
+            if (! isset($query)) {
                 continue;
             }
 
@@ -32,7 +33,7 @@ class ApiFilter {
 
             foreach ($operators as $operator) {
                 if (isset($query[$operator])) {
-                    
+
                     $eloQuery[] = [$column, $this->operatorMap[$operator], $query[$operator]];
                 }
             }
@@ -40,5 +41,4 @@ class ApiFilter {
 
         return $eloQuery;
     }
-
 }

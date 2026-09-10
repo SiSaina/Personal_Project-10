@@ -9,10 +9,11 @@ class Role extends Model
 {
     /** @use HasFactory<\Database\Factories\RoleFactory> */
     use HasFactory;
+
     public $timestamps = false;
 
     protected $fillable = [
-        'role_type'
+        'role_type',
     ];
 
     public function users()

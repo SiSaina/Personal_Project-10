@@ -22,32 +22,37 @@ class UpdateProductRequest extends FormRequest
      */
     public function rules(): array
     {
-        if(Request()->isMethod('PUT')){
+        if (Request()->isMethod('PUT')) {
             return [
                 'category_id' => ['required', 'integer', 'exists:categories,id'],
                 'date' => ['required', 'date'],
                 'description' => ['required', 'string', 'max:1000'],
                 'name' => ['required', 'string', 'max:255', Rule::unique('products', 'name')->ignore($this->product)],
                 'offer_price' => ['required', 'numeric', 'min:0'],
-                'price' => ['required', 'numeric', 'min:0']
+                'price' => ['required', 'numeric', 'min:0'],
+                'stock_quantity' => ['required', 'integer', 'min:0'],
             ];
-        }
-        else {
+        } else {
             return [
                 'category_id' => ['sometimes', 'required', 'integer', 'exists:categories,id'],
                 'date' => ['sometimes', 'required', 'date'],
                 'description' => ['sometimes', 'required', 'string', 'max:1000'],
                 'name' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('products', 'name')->ignore($this->product)],
                 'offer_price' => ['sometimes', 'required', 'numeric', 'min:0'],
-                'price' => ['sometimes', 'required', 'numeric', 'min:0']
+                'price' => ['sometimes', 'required', 'numeric', 'min:0'],
+                'stock_quantity' => ['sometimes', 'required', 'integer', 'min:0'],
             ];
         }
     }
+
     public function prepareForValidation()
     {
-        $this->merge([
-            'category_id' => $this->categoryId,
-            'offer_price' => $this->offerPrice
-        ]);
+        $mapped = [];
+        foreach (['categoryId' => 'category_id', 'offerPrice' => 'offer_price', 'stockQuantity' => 'stock_quantity'] as $input => $attribute) {
+            if ($this->exists($input)) {
+                $mapped[$attribute] = $this->input($input);
+            }
+        }
+        $this->merge($mapped);
     }
 }

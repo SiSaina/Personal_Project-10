@@ -21,7 +21,8 @@ class ProductResource extends JsonResource
             'price' => $this->price,
             'offerPrice' => $this->offer_price,
             'date' => $this->date,
-            'orders' => OrderResource::collection($this->whenLoaded('orders')),
+            'stockQuantity' => $this->stock_quantity,
+            'averageRating' => round((float) ($this->reviews_avg_rating ?? 0), 1),
             'images' => ImageResource::collection($this->whenLoaded('images')),
             'category' => $this->whenLoaded('category'),
         ];

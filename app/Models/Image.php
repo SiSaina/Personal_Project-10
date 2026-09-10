@@ -9,11 +9,12 @@ class Image extends Model
 {
     /** @use HasFactory<\Database\Factories\ImageFactory> */
     use HasFactory;
+
     public $timestamps = false;
 
     protected $fillable = [
         'product_id',
-        'url'
+        'url',
     ];
 
     public function product()

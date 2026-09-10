@@ -21,21 +21,21 @@ class UpdateRoleRequest extends FormRequest
      */
     public function rules(): array
     {
-        if(Request()->isMethod('PUT')){
+        if (Request()->isMethod('PUT')) {
             return [
-                'role_type' => ['required', 'string', 'max:255']
+                'role_type' => ['required', 'string', 'max:255'],
             ];
-        }
-        else {
+        } else {
             return [
-                'role_type' => ['sometimes', 'required', 'string', 'max:255']
+                'role_type' => ['sometimes', 'required', 'string', 'max:255'],
             ];
         }
     }
+
     public function prepareForValidation()
     {
-        $this->merge([
-            'role_type' => $this->roleType,
-        ]);
+        if ($this->exists('roleType')) {
+            $this->merge(['role_type' => $this->input('roleType')]);
+        }
     }
 }
