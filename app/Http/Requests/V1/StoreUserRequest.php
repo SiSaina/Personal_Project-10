@@ -30,11 +30,12 @@ class StoreUserRequest extends FormRequest
             'image_url' => ['nullable', 'string', 'url'],
         ];
     }
+
     public function prepareForValidation()
     {
         $this->merge([
-            'role_id' => $this->roleId,
-            'image_url' => $this->imageUrl,
+            'role_id' => $this->input('roleId', $this->input('role_id')),
+            'image_url' => $this->input('imageUrl', $this->input('image_url')),
         ]);
     }
 }

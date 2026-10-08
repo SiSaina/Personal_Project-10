@@ -22,7 +22,7 @@ class AddressResource extends JsonResource
             'suburb' => $this->suburb,
             'city' => $this->city,
             'country' => $this->country,
-            'userId' => $this->user_id
+            'userId' => $this->user_id,
         ];
     }
 }

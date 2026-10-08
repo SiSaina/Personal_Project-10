@@ -21,6 +21,7 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'imageUrl' => $this->image_url,
             'roleId' => $this->role_id,
+            'roleType' => $this->whenLoaded('role', fn () => $this->role?->role_type),
             'addresses' => AddressResource::collection($this->whenLoaded('addresses')),
             'orders' => OrderResource::collection($this->whenLoaded('orders')),
         ];

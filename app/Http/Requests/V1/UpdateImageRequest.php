@@ -21,23 +21,23 @@ class UpdateImageRequest extends FormRequest
      */
     public function rules(): array
     {
-        if(Request()->isMethod('PUT')){
+        if (Request()->isMethod('PUT')) {
             return [
                 'url' => ['required', 'string', 'max:255'],
-                'product_id' => ['required', 'integer' ,'exists:products,id'],
+                'product_id' => ['required', 'integer', 'exists:products,id'],
             ];
-        }
-        else {
+        } else {
             return [
                 'url' => ['sometimes', 'required', 'string', 'max:255'],
-                'product_id' => ['sometimes', 'required', 'integer' ,'exists:products,id'],
+                'product_id' => ['sometimes', 'required', 'integer', 'exists:products,id'],
             ];
         }
     }
+
     public function prepareForValidation()
     {
-        $this->merge([
-            'product_id' => $this->productId,
-        ]);
+        if ($this->exists('productId')) {
+            $this->merge(['product_id' => $this->input('productId')]);
+        }
     }
 }

@@ -23,17 +23,20 @@ class BulkStoreImageRequest extends FormRequest
     {
         return [
             '*.url' => ['required', 'string', 'max:255'],
-            '*.product_id' => ['required', 'integer' ,'exists:products,id'],
+            '*.product_id' => ['required', 'integer', 'exists:products,id'],
         ];
     }
+
     public function prepareForValidation()
     {
         $data = [];
 
-        foreach($this->toArray() as $obj){
-            $obj['product_id'] = $obj['productId'] ?? null;
+        foreach ($this->all() as $obj) {
+            if (array_key_exists('productId', $obj)) {
+                $obj['product_id'] = $obj['productId'];
+            }
             $data[] = $obj;
         }
-        $this->merge($data);
+        $this->replace($data);
     }
 }

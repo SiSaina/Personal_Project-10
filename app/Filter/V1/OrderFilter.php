@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filter\V1;
 
 use App\Filter\ApiFilter;
@@ -6,13 +7,13 @@ use App\Filter\ApiFilter;
 class OrderFilter extends ApiFilter
 {
     protected $safeParms = [
-        'productId' => ['eq'],
-        'quantity' => ['eq', 'lt', 'lte', 'gt', 'gte']
+        'userId' => ['eq'],
+        'status' => ['eq'],
+        'placedAt' => ['eq', 'lt', 'lte', 'gt', 'gte'],
     ];
 
     protected $columnMap = [
-        'productId' => 'product_id'
+        'userId' => 'user_id',
+        'placedAt' => 'placed_at',
     ];
 }
-
-?>

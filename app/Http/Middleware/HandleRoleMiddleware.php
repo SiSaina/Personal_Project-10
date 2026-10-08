@@ -24,7 +24,7 @@ class HandleRoleMiddleware
         }
 
         // If the user doesn't have the correct role to certain CRUD
-        if (! $user->role || ! in_array($user->role->role_type, $roles, true)) {
+        if (!$user->role || !in_array($user->role->role_type, $roles)) {
             return response()->json([
                 'message' => 'You do not have permission to access this resource.',
             ], 403);

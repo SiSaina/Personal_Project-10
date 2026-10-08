@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -17,15 +16,9 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'role_id' => 'required|exists:roles,id',
         ]);
-
-        $customerRole = Role::whereRaw('LOWER(TRIM(role_type)) = ?', ['customer'])->first();
-        if (! $customerRole) {
-            throw ValidationException::withMessages([
-                'email' => ['Customer registration is unavailable. Please contact the administrator.'],
-            ]);
-        }
-
+    
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -57,7 +50,7 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
-            'user' => $user,
+            'user' => new UserResource($user),
         ]);
     }
 
@@ -69,7 +62,9 @@ class AuthController extends Controller
             $user->load('addresses');
         }
 
-        return response()->json($user);
+        $user->loadMissing('role');
+
+        return new UserResource($user);
     }
 
     public function logout(Request $request)

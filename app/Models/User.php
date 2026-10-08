@@ -11,16 +11,23 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasApiTokens, HasFactory, Notifiable;
 
     public $timestamps = false;
+
     public function role()
     {
         return $this->belongsTo(Role::class);
     }
+
     public function addresses()
     {
         return $this->hasMany(Address::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
     }
 
     /**
@@ -34,7 +41,7 @@ class User extends Authenticatable
         'password',
         'role_id',
         'phone',
-        'image_url'
+        'image_url',
     ];
 
     /**

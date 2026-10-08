@@ -3,41 +3,30 @@
 namespace App\Http\Requests\V1;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateOrderRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return true;
+        return in_array($this->user()?->role?->role_type, ['Admin', 'Employee'], true);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        if(Request()->isMethod('PUT')){
-            return [
-                'product_id' => ['required', 'integer', 'exists:products,id'],
-                'quantity' => ['required', 'integer', 'min:1'],
-            ];
-        }
-        else {
-            return [
-                'product_id' => ['sometimes', 'required', 'integer', 'exists:products,id'],
-                'quantity' => ['sometimes', 'required', 'integer', 'min:1'],
-            ];
-        }
+        return [
+            'payment_status' => ['sometimes', Rule::in(['unpaid', 'pending', 'paid', 'failed', 'refunded'])],
+            'fulfillment_status' => ['sometimes', Rule::in(['unfulfilled', 'processing', 'shipped', 'delivered', 'cancelled'])],
+        ];
     }
-    public function prepareForValidation()
+
+    protected function prepareForValidation(): void
     {
-        $this->merge([
-            'product_id' => $this->productId
-        ]);
+        if ($this->exists('paymentStatus')) {
+            $this->merge(['payment_status' => $this->input('paymentStatus')]);
+        }
+        if ($this->exists('fulfillmentStatus')) {
+            $this->merge(['fulfillment_status' => $this->input('fulfillmentStatus')]);
+        }
     }
 }

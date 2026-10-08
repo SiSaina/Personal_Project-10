@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use Illuminate\Http\Request;
-use App\Models\Category;
+use App\Filter\V1\CategoryFilter;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\StoreCategoryRequest;
 use App\Http\Requests\V1\UpdateCategoryRequest;
-use App\Http\Controllers\Controller;
-use App\Http\Resources\V1\CategoryResource;
 use App\Http\Resources\V1\CategoryCollection;
-use App\Filter\V1\CategoryFilter;
+use App\Http\Resources\V1\CategoryResource;
+use App\Models\Category;
+use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
@@ -18,15 +18,16 @@ class CategoryController extends Controller
      */
     public function index(Request $request)
     {
-        $filter = new CategoryFilter();
+        $filter = new CategoryFilter;
         $filterItems = $filter->transform($request);
 
         $includeProducts = $request->query('includeProducts');
 
         $categories = Category::where($filterItems);
-        if($includeProducts) {
+        if ($includeProducts) {
             $categories->with('products');
         }
+
         return new CategoryCollection($categories
             ->orderBy('id', 'asc')
             ->paginate()
@@ -34,24 +35,26 @@ class CategoryController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.     
+     * Store a newly created resource in storage.
+     *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(StoreCategoryRequest $request)
     {
-        return new CategoryResource(Category::create($request->all()));
+        return new CategoryResource(Category::create($request->validated()));
     }
 
     /**
      * Display the specified resource.
      */
     public function show(Category $category)
-    {        
+    {
         $includeProducts = request()->query('includeProducts');
-        if($includeProducts) {
+        if ($includeProducts) {
             $category->loadMissing('products');
         }
+
         return new CategoryResource($category);
     }
 
@@ -61,6 +64,8 @@ class CategoryController extends Controller
     public function update(UpdateCategoryRequest $request, Category $category)
     {
         $category->update($request->validated());
+
+        return new CategoryResource($category);
     }
 
     /**
@@ -68,6 +73,8 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        //
+        $category->delete();
+
+        return response()->noContent();
     }
 }

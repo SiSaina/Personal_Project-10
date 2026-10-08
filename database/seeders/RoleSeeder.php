@@ -12,8 +12,6 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        foreach (['Admin', 'Employee', 'Customer'] as $roleType) {
-            Role::firstOrCreate(['role_type' => $roleType]);
-        }
+        Role::factory()->count(3)->create();
     }
 }

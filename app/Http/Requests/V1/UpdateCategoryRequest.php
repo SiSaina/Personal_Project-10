@@ -22,14 +22,13 @@ class UpdateCategoryRequest extends FormRequest
      */
     public function rules(): array
     {
-        if(Request()->isMethod('PUT')){
+        if (Request()->isMethod('PUT')) {
             return [
-                'name' => ['required', 'string', 'max:255']
+                'name' => ['required', 'string', 'max:255'],
             ];
-        }
-        else {
+        } else {
             return [
-                'name' => ['sometimes', 'required', 'string', 'max:255']
+                'name' => ['sometimes', 'required', 'string', 'max:255'],
             ];
         }
     }

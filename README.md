@@ -1,61 +1,153 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Store API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel 12 JSON API for a small online store. It provides a public catalogue, Sanctum token authentication, role-based catalogue administration, customer-owned addresses, and transactional checkout with historical price snapshots.
 
-## About Laravel
+## Requirements
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.2+
+- Composer
+- SQLite (simplest for local development) or MySQL
+- Node.js/npm only if you intend to use the bundled Vite frontend tooling
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Development setup
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+```
 
-## Learning Laravel
+For SQLite, create `database/database.sqlite` and set:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```dotenv
+DB_CONNECTION=sqlite
+DB_DATABASE=/absolute/path/to/database/database.sqlite
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+For MySQL, set `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD` in `.env`.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+For real order emails, configure `MAIL_MAILER=smtp` plus `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, and `MAIL_FROM_ADDRESS`. The default local `log` mailer writes messages to `storage/logs/laravel.log`.
 
-## Laravel Sponsors
+Then initialize and run the application:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+php artisan migrate --seed
+php artisan serve
+```
 
-### Premium Partners
+The API is available at `http://127.0.0.1:8000/api`. Run the test suite with:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development/)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+php artisan test
+```
 
-## Contributing
+The order redesign migration converts each complete legacy `order_details` record and its product row into a new order with a priced item snapshot. Unattached legacy cart rows have no owner and are discarded; back up important databases before migrating.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Authentication and roles
 
-## Code of Conduct
+Register with `POST /api/register`, then log in with `POST /api/login`. Login returns a Sanctum bearer token. Send it on protected requests:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```http
+Authorization: Bearer YOUR_TOKEN
+Accept: application/json
+```
 
-## Security Vulnerabilities
+Public registration always creates a `Customer`; supplied role IDs are ignored. The seeded roles are `Admin`, `Employee`, and `Customer`.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Capability | Public | Customer | Employee | Admin |
+|---|---:|---:|---:|---:|
+| Read catalogue | Yes | Yes | Yes | Yes |
+| Manage own addresses/orders | No | Yes | Yes | Yes |
+| Create/update catalogue | No | No | Yes | Yes |
+| Delete catalogue | No | No | No | Yes |
+| Manage users/roles | No | No | No | Yes |
+| Change order status | No | No | Yes | Yes |
 
-## License
+Customers only see their own orders and addresses. Employees and admins can inspect all orders and addresses.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Request conventions
+
+JSON request and response fields use camelCase. Relevant write endpoints also accept their snake_case database equivalents for compatibility. PATCH only changes provided fields; omitted camelCase fields are not converted into null values.
+
+Validation failures return HTTP `422`, unauthenticated requests return `401`, and forbidden requests return `403`.
+
+## API endpoints
+
+### Authentication
+
+| Method | Endpoint | Access | Purpose |
+|---|---|---|---|
+| POST | `/api/register` | Public | Register a customer |
+| POST | `/api/login` | Public | Create a bearer token |
+| GET | `/api/user` | Authenticated | Current user; `?includeAddresses=true` is supported |
+| POST | `/api/logout` | Authenticated | Revoke the current token |
+
+Registration body:
+
+```json
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com",
+  "password": "a-secure-password",
+  "password_confirmation": "a-secure-password"
+}
+```
+
+### Catalogue
+
+| Resource | Public reads | Employee/Admin writes | Admin delete |
+|---|---|---|---|
+| `/api/v1/products` | GET list/item | POST, PUT, PATCH | DELETE |
+| `/api/v1/categories` | GET list/item | POST, PUT, PATCH | DELETE |
+| `/api/v1/images` | GET list/item | POST, PUT, PATCH | DELETE |
+| `/api/v1/images/bulk` | — | POST | — |
+
+Product write fields are `categoryId`, `name`, `description`, `price`, `offerPrice`, and `date`. Prices must be non-negative. Catalogue list endpoints retain their documented filter query parameters and pagination metadata.
+
+### Addresses
+
+`/api/v1/addresses` supports GET, POST, PUT/PATCH, and DELETE. Customers are automatically assigned as the owner and cannot transfer an address to another user.
+
+```json
+{
+  "fullName": "Ada Lovelace",
+  "postalCode": "1010",
+  "streetName": "1 Queen Street",
+  "suburb": "Central",
+  "city": "Auckland",
+  "country": "New Zealand"
+}
+```
+
+### Checkout and orders
+
+`POST /api/v1/orders` is the checkout endpoint. `addressId` must belong to the authenticated customer. Products must be unique in the item list and quantities must be from 1 to 100.
+
+```json
+{
+  "addressId": 12,
+  "paymentMethod": "bank_transfer",
+  "items": [
+    { "productId": 4, "quantity": 2 },
+    { "productId": 9, "quantity": 1 }
+  ]
+}
+```
+
+Checkout runs in one database transaction. The server loads current product prices, uses a positive lower offer price when available, and stores `productName`, `unitPrice`, `quantity`, and `lineTotal` in `order_items`. It calculates and stores the order `subtotal` and `total`; client-supplied monetary values are ignored.
+
+`paymentMethod` is one of `bank_transfer`, `cash_on_delivery`, or `manual`. Checkout reserves stock and sends an order confirmation containing the stored items and totals.
+
+| Method | Endpoint | Access |
+|---|---|---|
+| GET | `/api/v1/orders` | Owner sees own; staff see all |
+| POST | `/api/v1/orders` | Authenticated checkout |
+| GET | `/api/v1/orders/{id}` | Owner or staff |
+| PATCH | `/api/v1/orders/{id}` | Employee/Admin; payment and fulfillment updates |
+| DELETE | `/api/v1/orders/{id}` | Admin |
+
+Fulfillment follows `unfulfilled` → `processing` → `shipped` → `delivered`; steps cannot be skipped or reversed. Staff may cancel an unpaid order before shipment using `{ "fulfillmentStatus": "cancelled" }`. That cancellation restores reserved stock exactly once. Processing, shipping, and delivery changes send customer update emails. Order items do not have independent mutation endpoints: their stored prices and totals are an immutable checkout snapshot.
+
+### Administration
+
+Admins can manage `/api/v1/users` and `/api/v1/roles`. A role still assigned to users cannot be deleted. Password hashes are never included in API resources.

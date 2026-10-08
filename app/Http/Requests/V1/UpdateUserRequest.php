@@ -22,7 +22,7 @@ class UpdateUserRequest extends FormRequest
      */
     public function rules(): array
     {
-        if(Request()->isMethod('PUT')){
+        if (Request()->isMethod('PUT')) {
             return [
                 'name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user)],
@@ -31,8 +31,7 @@ class UpdateUserRequest extends FormRequest
                 'phone' => ['required', 'string', 'max:15'],
                 'image_url' => ['nullable', 'string', 'url'],
             ];
-        }
-        else {
+        } else {
             return [
                 'name' => ['sometimes', 'required', 'string', 'max:255'],
                 'email' => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user)],
@@ -43,11 +42,15 @@ class UpdateUserRequest extends FormRequest
             ];
         }
     }
+
     public function prepareForValidation()
     {
-        $this->merge([
-            'role_id' => $this->roleId,
-            'image_url' => $this->imageUrl,
-        ]);
+        $mapped = [];
+        foreach (['roleId' => 'role_id', 'imageUrl' => 'image_url'] as $input => $attribute) {
+            if ($this->exists($input)) {
+                $mapped[$attribute] = $this->input($input);
+            }
+        }
+        $this->merge($mapped);
     }
 }

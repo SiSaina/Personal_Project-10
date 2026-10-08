@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filter\V1;
 
 use App\Filter\ApiFilter;
@@ -10,13 +11,11 @@ class UserFilter extends ApiFilter
         'email' => ['eq'],
         'phone' => ['eq'],
         'imageUrl' => ['eq'],
-        'roleId' => ['eq']
+        'roleId' => ['eq'],
     ];
 
     protected $columnMap = [
         'imageUrl' => 'image_url',
-        'roleId' => 'role_id'
+        'roleId' => 'role_id',
     ];
 }
-
-?>
