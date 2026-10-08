@@ -7,11 +7,13 @@ use Illuminate\Database\Seeder;
 
 class RoleSeeder extends Seeder
 {
-    /**d
+    /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        Role::factory()->count(3)->create();
+        foreach (['Admin', 'Employee', 'Customer'] as $roleType) {
+            Role::firstOrCreate(['role_type' => $roleType]);
+        }
     }
 }

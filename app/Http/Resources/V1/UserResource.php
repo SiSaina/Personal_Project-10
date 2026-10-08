@@ -19,7 +19,6 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'phone' => $this->phone,
-            'password' => $this->password,
             'imageUrl' => $this->image_url,
             'roleId' => $this->role_id,
             'addresses' => AddressResource::collection($this->whenLoaded('addresses')),

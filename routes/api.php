@@ -22,23 +22,29 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::prefix('v1')->namespace('App\Http\Controllers\Api\V1')->group(function () {
-    Route::post('images/bulk', [ImageController::class, 'bulkStore']);
-    Route::post('orders/bulk', [OrderController::class, 'bulkStore']);
+    Route::post('images/bulk', [ImageController::class, 'bulkStore'])->middleware(['auth:sanctum', 'role:Admin,Employee']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('addresses', AddressController::class);
     });
-    Route::apiResource('products', ProductController::class)->only(['index', 'show', 'store', 'update']);
+    Route::apiResource('products', ProductController::class)->only(['index', 'show']);
+    Route::middleware(['auth:sanctum', 'role:Admin,Employee'])->group(function () {
+        Route::apiResource('products', ProductController::class)->only(['store', 'update']);
+        Route::apiResource('categories', CategoryController::class)->only(['store', 'update']);
+        Route::apiResource('images', ImageController::class)->only(['store', 'update']);
+    });
+    Route::middleware(['auth:sanctum', 'role:Admin'])->group(function () {
+        Route::apiResource('users', UserController::class)->only(['index', 'show', 'store', 'update']);
+        Route::apiResource('roles', RoleController::class)->only(['index', 'show', 'store', 'update']);
+    });
     // Read Permissions
     Route::middleware(['auth:sanctum', 'role:Admin,Employee,Customer'])->group(function () {
-        Route::apiResource('categories', CategoryController::class)->only(['index', 'show', 'store', 'update']);
-        Route::apiResource('images', ImageController::class)->only(['index', 'show', 'store', 'update']);
+        Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
+        Route::apiResource('images', ImageController::class)->only(['index', 'show']);
 
         Route::apiResource('orderDetails', OrderDetailController::class)->only(['index', 'show', 'store', 'update']);
         Route::get('orderDetails/userProduct/{id}', [OrderDetailController::class, 'showUserProduct']);
 
-        Route::apiResource('users', UserController::class)->only(['index', 'show', 'store', 'update']);
-        Route::apiResource('roles', RoleController::class)->only(['index', 'show', 'store', 'update']);
 
         Route::apiResource('orders', OrderController::class)->only(['index', 'show', 'store', 'update']);
         Route::post('orders/bulk', [OrderController::class, 'bulkStore']);
