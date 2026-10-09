@@ -1,4 +1,5 @@
 <?php
+// Retired before execution. Kept outside database/migrations for reference only.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

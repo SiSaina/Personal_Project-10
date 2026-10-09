@@ -25,6 +25,8 @@
             <a href="{{ route('admin.dashboard') }}">Dashboard</a>
             <a href="{{ route('admin.products') }}">Products</a>
             <a href="{{ route('admin.categories') }}">Categories</a>
+            <a href="{{ route('admin.orders') }}">Orders</a>
+            <a href="{{ route('admin.addresses') }}">Addresses</a>
             <a href="{{ route('admin.users') }}">Users</a>
             <a href="{{ route('admin.roles') }}">Roles</a>
             <span>{{ auth('web')->user()->name }}</span>

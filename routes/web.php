@@ -13,6 +13,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('admin.session')->group(function () {
         Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::post('logout', [AdminController::class, 'logout'])->name('logout');
+        Route::get('orders', [AdminController::class, 'orders'])->name('orders');
+        Route::get('orders/{order}', [AdminController::class, 'orderDetails'])->name('orders.show');
+        Route::get('addresses', [AdminController::class, 'addresses'])->name('addresses');
+        Route::get('addresses/create', [AdminController::class, 'addressForm'])->name('addresses.create');
+        Route::post('addresses', [AdminController::class, 'saveAddress'])->name('addresses.store');
+        Route::get('addresses/{address}/edit', [AdminController::class, 'addressForm'])->name('addresses.edit');
+        Route::put('addresses/{address}', [AdminController::class, 'saveAddress'])->name('addresses.update');
         Route::get('products', [AdminController::class, 'products'])->name('products');
         Route::get('products/create', [AdminController::class, 'productForm'])->name('products.create');
         Route::post('products', [AdminController::class, 'saveProduct'])->name('products.store');

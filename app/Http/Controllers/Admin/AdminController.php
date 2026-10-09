@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Address;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Product;
@@ -48,7 +49,7 @@ class AdminController extends Controller
     {
         return view('admin.dashboard', ['counts' => [
             'Products' => Product::count(), 'Categories' => Category::count(),
-            'Users' => User::count(), 'Orders' => Order::count(),
+            'Users' => User::count(), 'Orders' => Order::count(), 'Addresses' => Address::count(),
         ]]);
     }
 
@@ -82,6 +83,69 @@ class AdminController extends Controller
     public function categories()
     {
         return view('admin.categories', ['categories' => Category::withCount('products')->orderBy('name')->paginate(15)]);
+    }
+
+    public function orders(Request $request)
+    {
+        $search = $request->validate(['search' => 'nullable|string|max:100'])['search'] ?? '';
+        $orders = Order::with('user')->withCount('items')
+            ->when($search !== '', fn ($query) => $query->where(function ($query) use ($search) {
+                if (ctype_digit($search)) {
+                    $query->where('id', $search)->orWhereHas('user', fn ($user) => $user->where('name', 'like', '%'.$search.'%')->orWhere('email', 'like', '%'.$search.'%'));
+                } else {
+                    $query->whereHas('user', fn ($user) => $user->where('name', 'like', '%'.$search.'%')->orWhere('email', 'like', '%'.$search.'%'));
+                }
+            }))
+            ->latest('placed_at')->orderByDesc('id')->paginate(15)->withQueryString();
+
+        return view('admin.orders', compact('orders', 'search'));
+    }
+
+    public function orderDetails(Order $order)
+    {
+        return view('admin.order-details', ['order' => $order->load(['user', 'address', 'items.product'])]);
+    }
+
+    public function addresses(Request $request)
+    {
+        $search = $request->validate(['search' => 'nullable|string|max:100'])['search'] ?? '';
+        $addresses = Address::with('user')
+            ->when($search !== '', fn ($query) => $query->where(fn ($query) => $query
+                ->where('full_name', 'like', '%'.$search.'%')->orWhere('city', 'like', '%'.$search.'%')
+                ->orWhere('street_name', 'like', '%'.$search.'%')
+                ->orWhereHas('user', fn ($user) => $user->where('email', 'like', '%'.$search.'%'))))
+            ->orderByDesc('id')->paginate(15)->withQueryString();
+
+        return view('admin.addresses', compact('addresses', 'search'));
+    }
+
+    public function addressForm(?Address $address = null)
+    {
+        return view('admin.address-form', [
+            'address' => $address ?? new Address(),
+            'users' => User::orderBy('name')->get(['id', 'name', 'email']),
+        ]);
+    }
+
+    public function saveAddress(Request $request, ?Address $address = null)
+    {
+        $address ??= new Address();
+        $data = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'full_name' => 'required|string|max:255',
+            'postal_code' => 'required|string|max:10',
+            'street_name' => 'required|string|max:255',
+            'suburb' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'country' => 'required|string|max:255',
+        ]);
+        if ($address->exists && (int) $address->user_id !== (int) $data['user_id']
+            && Order::where('address_id', $address->id)->exists()) {
+            throw ValidationException::withMessages(['user_id' => 'An address used by an order cannot be moved to another user.']);
+        }
+        $address->fill($data)->save();
+
+        return redirect()->route('admin.addresses')->with('status', 'Address saved.');
     }
 
     public function users(Request $request)
